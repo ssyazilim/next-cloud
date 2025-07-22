@@ -1,36 +1,59 @@
 services:
-  nextcloud-app:
+  nextcloud:
     image: nextcloud
-    restart: always
+    container_name: nextcloud
+    restart: unless-stopped
+    networks: 
+      - cloud
+    depends_on:
+      - nextclouddb
+    ports:
+      - 8081:80
     volumes:
-      - nextcloud-data:/var/www/html
+      - ./html:/var/www/html
+      - ./custom_apps:/var/www/html/custom_apps
+      - ./config:/var/www/html/config
+      - ./data:/var/www/html/data
     environment:
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
-      - MYSQL_HOST=nextcloud-db
-    networks:
-      - nextcloud-frontend
-      - nextcloud-backend
-
-  nextcloud-db:
-    image: mariadb
-    restart: always
-    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
-    volumes:
-      - nextcloud-db:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=replace-with-secure-password
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
-    networks:
-      - backend
+      - MYSQL_HOST=nextclouddb
 
-networks:
-  nextcloud-frontend:
-  nextcloud-backend:
+  nextclouddb:
+      image: mariadb
+      container_name: nextcloud-db
+      restart: unless-stopped
+      command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+      networks: 
+        - cloud
+      volumes:
+        - ./nextclouddb:/var/lib/mysql
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=America/Los_Angeles
+        - MYSQL_RANDOM_ROOT_PASSWORD=true
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_DATABASE=nextcloud
+        - MYSQL_USER=nextcloud
 
-volumes:
-  nextcloud-data:
-  nextcloud-db:
+  collabora:
+    image: collabora/code
+    container_name: collabora
+    restart: unless-stopped
+    networks: 
+      - cloud
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - password=password
+      - username=nextcloud
+      - domain=example.com
+      - extra_params=--o:ssl.enable=true
+    ports:
+      - 9980:9980
