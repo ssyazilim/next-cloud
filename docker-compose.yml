@@ -57,3 +57,8 @@ services:
       - extra_params=--o:ssl.enable=true
     ports:
       - 9980:9980
+
+networks:
+  cloud:
+    name: cloud
+    driver: bridge
