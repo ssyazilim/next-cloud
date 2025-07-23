@@ -1,0 +1,26 @@
+services:
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio_server
+    hostname: minio
+    command: server /data --console-address ":9005"
+
+    ports:
+      - "9005:9000"
+      - "9006:9001"
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./minio-data:/data
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9005/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+networks:
+  default:
+    name: minio_network
