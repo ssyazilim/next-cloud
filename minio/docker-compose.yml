@@ -3,7 +3,7 @@ services:
     image: quay.io/minio/minio:latest
     container_name: minio_server
     hostname: minio
-    command: server /data --console-address ":9005"
+    command: server /data --console-address ":9001"
 
     ports:
       - "9005:9000"
